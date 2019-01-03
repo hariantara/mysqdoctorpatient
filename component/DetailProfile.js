@@ -11,10 +11,12 @@ import {
     KeyboardAvoidingView,
     TouchableHighlight,
     FlatList,
-    AsyncStorage
+    AsyncStorage,
+    ActivityIndicator,
 } from 'react-native';
 import { graphql, compose, withApollo } from 'react-apollo'
 import gql from 'graphql-tag'
+
 import logo from '../static/cardiogram.png'
 import {
     StackNavigator,
@@ -76,9 +78,29 @@ class DetailProfile extends Component {
         this.reset();
     }
 
+    _getToken = async() => {
+        try{
+            let token = await AsyncStorage.getItem('shinchan')
+            console.log('detail token: ', token)
+        }catch(error){
+            console.log(error)
+        }
+    }
+
+    componentDidMount(){
+        this._getToken()
+    }
+
     render(){
         console.log('Props Detail Profile: ', this.props)
         console.log('State Detail Profile: ', this.state)
+        if(this.props.data.loading){
+            return(
+                <View style={styles.loading}>
+                    <ActivityIndicator size="large" color="#00000f"></ActivityIndicator>
+                </View>
+            )
+        }
         return(
             <ScrollView>
                 <View style={styles.container}>
@@ -139,6 +161,15 @@ const styles = StyleSheet.create({
     container: {
         alignItems: "center"
     },
+    loading: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
     update: {
         marginTop: 50,
         marginBottom: 100,
@@ -178,6 +209,33 @@ const styles = StyleSheet.create({
     }
 });
 
+let Queries = {
+    getPatientDetailApp: gql`
+        query{
+            getPatientDetailApp{
+                user{
+                    id,
+                    name,
+                    username,
+                    email,
+                    password,
+                    phone,
+                    id_card,
+                    sip,
+                    photo
+                },
+                error
+            }
+        }
+    `
+}
+
 let Wrapper = compose(
+    graphql(Queries.getPatientDetailApp,{
+        options: {
+            fetchPolicy: "cache-and-network",
+            ssr: false
+        }
+    }),
     withApollo
 )(DetailProfile)

@@ -3,8 +3,8 @@ package com.newdoc;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.imagepicker.ImagePickerPackage;
 import io.invertase.firebase.RNFirebasePackage;
+import com.imagepicker.ImagePickerPackage;
 import io.invertase.firebase.messaging.RNFirebaseMessagingPackage;
 import io.invertase.firebase.notifications.RNFirebaseNotificationsPackage;
 import io.invertase.firebase.config.RNFirebaseRemoteConfigPackage;
@@ -29,8 +29,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-          new ImagePickerPackage(),
           new RNFirebasePackage(),
+          new ImagePickerPackage(),
           new VectorIconsPackage(),
           new RNFirebaseMessagingPackage(),
           new RNFirebaseNotificationsPackage(),

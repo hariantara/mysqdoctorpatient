@@ -8,7 +8,8 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     TouchableHighlight,
-    TouchableOpacity
+    TouchableOpacity,
+    AsyncStorage
 } from 'react-native';
 import { graphql, compose, withApollo } from 'react-apollo'
 import gql from 'graphql-tag'
@@ -80,6 +81,15 @@ class LoginComponent extends Component {
         })
     }
 
+    _storage = async (key, value) => {
+        try {
+            await AsyncStorage.setItem("shinchan", value);
+            return true
+        } catch (error) {
+            console.log('AsyncStorage Error: ' + error.message);
+        }
+    }
+
     onLogin = async () => {
         let {
             username,
@@ -98,6 +108,9 @@ class LoginComponent extends Component {
                 console.log('login: ', login)
 
                 if (login.data.patientLogin.error === null && login.data.patientLogin.role === 2){
+                    let token = login.data.patientLogin.token
+                    console.log('token>>> ', token)
+                    await this._storage('authorization', String(token))
                     this.props.navigation.navigate('Home')
                 }else{
                     Alert.alert('Wrong Combination, May you check again')

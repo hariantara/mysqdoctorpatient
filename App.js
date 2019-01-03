@@ -20,26 +20,34 @@ const instructions = Platform.select({
 
 import { AsyncStorage } from "react-native"
 import { ApolloProvider } from 'react-apollo'
-import { createHttpLink } from "apollo-link-http";
+import { HttpLink } from "apollo-link-http";
 import ApolloClient from "apollo-client";
 import { InMemoryCache } from "apollo-cache-inmemory";
-import { ApolloLink, split } from 'apollo-link';
+import { ApolloLink, split, from, concat } from 'apollo-link';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
+import { setContext } from 'apollo-link-context';
 
 // const httpLink = createHttpLink({ uri: "http://localhost:3000/api/graphql" });
-const httpLink = createHttpLink({ uri: "http://192.168.43.251:4000/graphql" });
+const httpLink = new HttpLink({ uri: "http://192.168.43.251:4000/graphql" });
 
-const authMiddleware = new ApolloLink((operation, forward) => {
-  // add the authorization to the headers
-  operation.setContext(({ headers = {} }) => ({
+// const authMiddleware = new ApolloLink((operation, forward) => {
+//   operation.setContext(({headers}) => {
+//     console.log("Headers >>>> ", headers)
+//   });
+//   return forward(operation);
+// })
+
+const authMiddleware = setContext(async (_, { headers }) => {
+  const token = await AsyncStorage.getItem('shinchan')
+  console.log('FUCK: ', token)
+  return {
     headers: {
       ...headers,
-      authorization: AsyncStorage.getItem('token') || "",
+      // authorization: token ? `Bearer ${token}` : null,
+      authorization: token || null,
     }
-  }));
-
-  return forward(operation);
+  }
 })
 
 
@@ -48,7 +56,7 @@ const wsLink = new WebSocketLink({
   options: {
     reconnect: true,
     connectionParams: {
-      authToken: AsyncStorage.getItem('token'),
+      authToken: AsyncStorage.getItem('authorization'),
     }
   }
 })
@@ -74,13 +82,18 @@ import Navigations from '../newdoc/Route'
 class App extends Component {
   constructor(props){
     super(props)
+    this.state = {
+      notification: {}
+    }
   }
 
   async componentDidMount() {
+    console.log('PROPS APP DID MOUNT: ', this.props)
     const notificationOpen: NotificationOpen = await firebase.notifications().getInitialNotification();
     if (notificationOpen) {
       const action = notificationOpen.action;
       const notification: Notification = notificationOpen.notification;
+      console.log('notification: --->>>', notification)
       var seen = [];
       alert(JSON.stringify(notification.data, function (key, val) {
         if (val != null && typeof val == "object") {
@@ -114,16 +127,17 @@ class App extends Component {
       const action = notificationOpen.action;
       // Get information about the notification that was opened
       const notification: Notification = notificationOpen.notification;
+      this.setState({ notification: notification.data })
       var seen = [];
-      alert(JSON.stringify(notification.data, function (key, val) {
-        if (val != null && typeof val == "object") {
-          if (seen.indexOf(val) >= 0) {
-            return;
-          }
-          seen.push(val);
-        }
-        return val;
-      }));
+      // alert(JSON.stringify(notification.data, function (key, val) {
+      //   if (val != null && typeof val == "object") {
+      //     if (seen.indexOf(val) >= 0) {
+      //       return;
+      //     }
+      //     seen.push(val);
+      //   }
+      //   return val;
+      // }));
       firebase.notifications().removeDeliveredNotification(notification.notificationId);
 
     });
@@ -135,7 +149,8 @@ class App extends Component {
   }
 
   render() {
-    console.log('this.props ', this.props)
+    console.log('this.props >>>>', this.props)
+    console.log('state app: ', this.state)
     return (
         <ApolloProvider client={client}>
           <View style={styles.container}>
