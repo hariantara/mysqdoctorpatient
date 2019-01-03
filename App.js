@@ -10,6 +10,8 @@ import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View} from 'react-native';
 import firebase from 'react-native-firebase';
 import type { Notification, NotificationOpen } from 'react-native-firebase';
+import env from './shared/environment'
+
 
 const instructions = Platform.select({
   ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
@@ -29,7 +31,7 @@ import { getMainDefinition } from 'apollo-utilities';
 import { setContext } from 'apollo-link-context';
 
 // const httpLink = createHttpLink({ uri: "http://localhost:3000/api/graphql" });
-const httpLink = new HttpLink({ uri: "http://192.168.43.251:4000/graphql" });
+const httpLink = new HttpLink({ uri: env.graphqlURL });
 
 // const authMiddleware = new ApolloLink((operation, forward) => {
 //   operation.setContext(({headers}) => {
@@ -52,7 +54,7 @@ const authMiddleware = setContext(async (_, { headers }) => {
 
 
 const wsLink = new WebSocketLink({
-  uri: `ws://192.168.43.251:4000/subscriptions`,
+  uri: env.graphqlSubs,
   options: {
     reconnect: true,
     connectionParams: {

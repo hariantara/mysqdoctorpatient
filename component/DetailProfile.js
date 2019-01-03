@@ -37,6 +37,8 @@ import {
 } from 'react-native-elements'
 
 import ImagePicker from 'react-native-image-picker';
+import add from '../static/add.png'
+import env from '../shared/environment'
 
 export default (props) => {
     return (
@@ -48,7 +50,16 @@ class DetailProfile extends Component {
     constructor(props){
         super(props)
         this.state = {
-            pickedImage: null
+            pickedImage: null,
+            name: "",
+            password: "",
+            phone: "",
+            photo: "",
+            username: "",
+            id_card: "",
+            id: "",
+            email: "",
+            file: null
         }
     }
 
@@ -63,11 +74,13 @@ class DetailProfile extends Component {
             console.log('res: --> ', res)
             if (res.didCancel) {
                 console.log("User cancelled!");
+                this.setState({file: null})
             } else if (res.error) {
                 console.log("Error", res.error);
             } else {
                 this.setState({
-                    pickedImage: {uri:res.uri} 
+                    pickedImage: {uri:res.uri},
+                    file: res
                 });
 
             }
@@ -89,6 +102,107 @@ class DetailProfile extends Component {
 
     componentDidMount(){
         this._getToken()
+        if(!this.props.data.loading){
+            this.setState({
+                name: this.props.data.getPatientDetailApp.user.name,
+                password: this.props.data.getPatientDetailApp.user.password,
+                phone: this.props.data.getPatientDetailApp.user.phone,
+                photo: this.props.data.getPatientDetailApp.user.photo,
+                username: this.props.data.getPatientDetailApp.user.username,
+                id_card: this.props.data.getPatientDetailApp.user.id_card,
+                id: this.props.data.getPatientDetailApp.user.id,
+                email: this.props.data.getPatientDetailApp.user.email
+            })
+        }
+    }
+
+    componentWillReceiveProps(nextProps){
+        if(!nextProps.data.loading){
+            this.setState({
+                name: nextProps.data.getPatientDetailApp.user.name,
+                password: nextProps.data.getPatientDetailApp.user.password,
+                phone: nextProps.data.getPatientDetailApp.user.phone,
+                photo: nextProps.data.getPatientDetailApp.user.photo,
+                username: nextProps.data.getPatientDetailApp.user.username,
+                id_card: nextProps.data.getPatientDetailApp.user.id_card,
+                id: nextProps.data.getPatientDetailApp.user.id,
+                email: nextProps.data.getPatientDetailApp.user.email
+            })
+        }
+    }
+
+    name = (e) => {
+        console.log('e -> ', e)
+        this.setState({
+            name: e
+        })
+    }
+
+    username = (e) => {
+        this.setState({
+            username: e
+        })
+    }
+
+    email = (e) => {
+        this.setState({
+            email: e
+        })
+    }
+
+    phone = (e) => {
+        this.setState({
+            phone: e
+        })
+    }
+
+    id_card = (e) => {
+        this.setState({
+            id_card: e
+        })
+    }
+
+    onUpdate = async () => {
+        console.log('masuk on update')
+        try{
+            let {
+                name,
+                phone,
+                username,
+                id_card,
+                id,
+                email
+            } = this.state
+
+            if(name === "" || username === "" || email === "" || phone === "" || id_card === ""){
+                Alert.alert('Form must filled')
+            }else{
+                if(this.state.pickedImage === null){
+                    console.log('masuk ke if > ')
+                    let input = {
+                        name,
+                        username,
+                        email,
+                        phone,
+                        id_card,
+                        photo: this.state.photo
+                    }
+                    let update = await this.props.patientUpdate(input)
+                    console.log('update: ', update)
+                }else{
+                    console.log('masuk ke else >>')
+                    const data = new FormData()
+                    data.append('file', this.state.file)
+                    let upload = await fetch(env.graphqlUpload, {
+                        method: 'post',
+                        body: data
+                    })
+                    console.log('upload: ', upload)
+                }
+            }
+        }catch(err){
+            console.log('err: ', err)
+        }
     }
 
     render(){
@@ -105,47 +219,72 @@ class DetailProfile extends Component {
             <ScrollView>
                 <View style={styles.container}>
                     <View style={styles.placeholder}>
-                        <Image source={this.state.pickedImage} style={styles.previewImage} />
+                        {
+                            this.state.pickedImage !== null ? 
+                                <Avatar
+                                    xlarge
+                                    rounded
+                                    source={this.state.pickedImage}
+                                    activeOpacity={0.7}
+                                />
+                            :
+                                <Avatar
+                                    xlarge
+                                    rounded
+                                    source={{ uri: this.state.photo }}
+                                    activeOpacity={0.7}
+                                />
+                        }
                     </View>
-                    <View style={styles.button}>
+                    <View style={styles.add}>
+                        <Avatar
 
+                            small
+                            rounded
+                            source={add}
+                            onPress={this.pickImageHandler}
+                            activeOpacity={0.7} />
+                    </View>
+                    {/* <View>
+                        
                         <Button title="Pick Image" onPress={this.pickImageHandler} />
 
                         <Button title="Delete" onPress={this.resetHandler} />
 
-                    </View>
+                    </View> */}
                     <View>
                         <KeyboardAvoidingView style={styles.container} behavior="padding" enabled>
                             <View style={styles.form}>
                                 <FormLabel>Name</FormLabel>
                                 <FormInput
-                                    placeholder='type username here . . .'
-                                    onChangeText={this.username}
+                                    defaultValue={this.state.name}
+                                    onChangeText={this.name}
                                 />
                                 <FormLabel>Username</FormLabel>
                                 <FormInput
-                                    placeholder='type username here . . .'
+                                    defaultValue={this.state.username}
                                     onChangeText={this.username}
                                 />
                                 <FormLabel>Email</FormLabel>
                                 <FormInput
-                                    placeholder='type username here . . .'
-                                    onChangeText={this.username}
+                                    defaultValue={this.state.email}
+                                    onChangeText={this.email}
                                 />
                                 <FormLabel>Phone</FormLabel>
                                 <FormInput
-                                    placeholder='type username here . . .'
-                                    onChangeText={this.username}
+                                    defaultValue={this.state.phone}
+                                    onChangeText={this.phone}
                                 />
                                 <FormLabel>NRIC</FormLabel>
                                 <FormInput
-                                    placeholder='type username here . . .'
-                                    onChangeText={this.username}
+                                    defaultValue={this.state.id_card}
+                                    onChangeText={this.id_card}
                                 />
                             </View>
                             <View style={styles.update}>
                                 <Button
                                     title='UPDATE'
+                                    onPress={this.onUpdate}
                                 />
                             </View>
                         </KeyboardAvoidingView>
@@ -160,6 +299,15 @@ class DetailProfile extends Component {
 const styles = StyleSheet.create({
     container: {
         alignItems: "center"
+    },
+    add: {
+        // position: 'absolute',
+        left: 55,
+        right: 0,
+        top: 0,
+        bottom: 500,
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     loading: {
         position: 'absolute',
@@ -179,7 +327,7 @@ const styles = StyleSheet.create({
         // marginLeft: 180,
         marginTop: 30,
         // marginBottom: 50,
-        width: '70%'
+        width: '90%'
     },
     textStyle: {
         fontWeight: "bold",
@@ -189,12 +337,22 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     placeholder: {
-        borderWidth: 1,
-        borderColor: "black",
-        backgroundColor: "#eee",
-        width: "40%",
-        height: 170,
-        marginTop: 50,
+        // position: 'absolute',
+        marginBottom: 30,
+        left: 0,
+        right: 0,
+        top: 70,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center'
+        // paddingLeft: 60,
+        // paddingTop: 20
+        // borderWidth: 1,
+        // borderColor: "black",
+        // backgroundColor: "#eee",
+        // width: "40%",
+        // height: 170,
+        // marginTop: 50,
         // borderRadius: 200
     },
     button: {
@@ -230,7 +388,43 @@ let Queries = {
     `
 }
 
+let Mutations = {
+    patientUpdate: gql`
+        mutation patientUpdate(
+            $input: patientUpdate
+        ){
+            patientUpdate(input: $input){
+                patient{
+                    id,
+                    name,
+                    username,
+                    email,
+                    password,
+                    phone,
+                    id_card,
+                    photo
+                },
+                error
+            }
+            }
+    `
+}
+
 let Wrapper = compose(
+    graphql(Mutations.patientUpdate, {
+        props: ({mutate}) => ({
+            patientUpdate: (input) => {
+                return mutate({
+                    variables: {
+                        input
+                    },
+                    refetchQueries: [{
+                        query: Queries.getPatientDetailApp
+                    }]
+                })
+            }
+        })
+    }),
     graphql(Queries.getPatientDetailApp,{
         options: {
             fetchPolicy: "cache-and-network",
