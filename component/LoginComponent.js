@@ -7,7 +7,8 @@ import {
     Alert,
     ScrollView,
     KeyboardAvoidingView,
-    TouchableHighlight
+    TouchableHighlight,
+    TouchableOpacity
 } from 'react-native';
 import { graphql, compose, withApollo } from 'react-apollo'
 import gql from 'graphql-tag'
@@ -41,11 +42,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     loginForm: {
-        paddingLeft: 100,
+        paddingLeft: 90,
         marginTop: 50
     },
     Avatar: {
-        paddingLeft: 130,
+        paddingLeft: 100,
         paddingTop: 80
     },
     Button: {
@@ -95,7 +96,12 @@ class LoginComponent extends Component {
 
                 let login = await this.props.patientLogin(input)
                 console.log('login: ', login)
-                this.props.navigation.navigate('Home')
+
+                if (login.data.patientLogin.error === null && login.data.patientLogin.role === 2){
+                    this.props.navigation.navigate('Home')
+                }else{
+                    Alert.alert('Wrong Combination, May you check again')
+                }
             }
         }catch(err){
             console.log('err: ', err)
@@ -131,10 +137,12 @@ class LoginComponent extends Component {
                             />
                         </View>
                         <View style={styles.Button}>
-                            <Button
-                                title='LOGIN'
-                                onPress={this.onLogin}
-                            />
+                            {/* <TouchableOpacity onPress={this.onLogin}> */}
+                                <Button
+                                    title='LOGIN'
+                                    onPress={this.onLogin}
+                                />
+                            {/* </TouchableOpacity> */}
                         </View>
                     </View>
                 </KeyboardAvoidingView>

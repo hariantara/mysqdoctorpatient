@@ -9,6 +9,7 @@ import Home from '../screen/Home'
 import Login from '../screen/Login'
 import Profile from '../screen/Profile'
 import Booking from '../screen/Booking'
+import DetailProfile from '../component/DetailProfile'
 
 const Navigations = StackNavigator({
     Login: {screen: Login},
@@ -19,12 +20,26 @@ const Navigations = StackNavigator({
                 title: 'Home',
             }),
         },
-        Profile: {
-            screen: Profile,
-            navigationOptions: ({ navigation }) => ({
-                title: 'Profile',
-            }),
-        },
+        Profile: StackNavigator({
+            Profile: {
+                screen: Profile,
+                navigationOptions: ({ navigation }) => ({
+                    title: 'Profile',
+                }),
+            },
+            DetailProfile: {
+                screen: DetailProfile,
+                navigationOptions: ({ navigation }) => ({
+                    title: 'Detail',
+                }),
+            }
+        },{
+                headerMode: 'none',
+                navigationOptions: {
+                    headerVisible: false,
+                },
+                initialRouteName: 'Profile'
+        }),
         Booking: {
             screen: Booking,
             navigationOptions: ({ navigation }) => ({

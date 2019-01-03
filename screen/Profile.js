@@ -32,10 +32,12 @@ export default (props) => {
 }
 
 class Profile extends Component {
+
     render(){
+        console.log('Props Profile: ', this.props)
         return(
             <View>
-                <ProfileComponent />
+                <ProfileComponent navigation={this.props.navigation}/>
             </View>
         )
     }
