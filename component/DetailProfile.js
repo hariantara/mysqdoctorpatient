@@ -50,6 +50,7 @@ class DetailProfile extends Component {
     constructor(props){
         super(props)
         this.state = {
+            buttonText: false,
             pickedImage: null,
             name: "",
             password: "",
@@ -164,6 +165,7 @@ class DetailProfile extends Component {
 
     onUpdate = async () => {
         console.log('masuk on update')
+        this.setState({buttonText: true})
         try{
             let {
                 name,
@@ -189,19 +191,53 @@ class DetailProfile extends Component {
                     }
                     let update = await this.props.patientUpdate(input)
                     console.log('update: ', update)
+                    if(update.data.patientUpdate.error === null){
+                        Alert.alert("Success Update")
+                        this.setState({buttonText: false})
+                    }else{
+                        Alert.alert("Something error")
+                    }
                 }else{
                     console.log('masuk ke else >>')
                     const data = new FormData()
-                    data.append('file', this.state.file)
+                    data.append('file', {
+                        uri: this.state.file.uri,
+                        type: this.state.file.type,
+                        name: this.state.file.fileName
+                    })
                     let upload = await fetch(env.graphqlUpload, {
                         method: 'post',
                         body: data
                     })
-                    console.log('upload: ', upload)
+
+                    if(upload.status === 200){
+                        let dataJSON = await upload.json()
+                        console.log('dataJSON: ', dataJSON)
+                        let img = dataJSON.filePaths.file 
+                        let input = {
+                            name,
+                            username,
+                            email,
+                            phone,
+                            id_card,
+                            photo: img
+                        }
+
+                        let update = await this.props.patientUpdate(input)
+                        console.log('update: ', update)
+                        if (update.data.patientUpdate.error === null) {
+                            Alert.alert("Success Update")
+                            this.setState({ buttonText: false })
+                        } else {
+                            Alert.alert("Something error")
+                        }
+                    }else{
+                        Alert.alert("failed to update")
+                    }
                 }
             }
         }catch(err){
-            console.log('err: ', err)
+            // console.error('err: ', err)
         }
     }
 
@@ -282,10 +318,15 @@ class DetailProfile extends Component {
                                 />
                             </View>
                             <View style={styles.update}>
-                                <Button
-                                    title='UPDATE'
-                                    onPress={this.onUpdate}
-                                />
+                                {
+                                    this.state.buttonText ? 
+                                    <ActivityIndicator size="large" color="#0000ff"></ActivityIndicator>
+                                    : 
+                                    <Button
+                                        title={'UPDATE'}
+                                        onPress={this.onUpdate}
+                                    />
+                                }
                             </View>
                         </KeyboardAvoidingView>
                     </View>
