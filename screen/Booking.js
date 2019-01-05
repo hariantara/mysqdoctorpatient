@@ -52,7 +52,7 @@ class Booking extends Component {
         console.log('state booking: ', this.state)
         return(
             <View style={{flex: 1}}>
-                <CreateBooking/>
+                <CreateBooking navigation={this.props.navigation}/>
             </View>
         )
     }

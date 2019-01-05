@@ -28,6 +28,8 @@ import { graphql, compose, withApollo } from 'react-apollo'
 import gql from 'graphql-tag'
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import { Dropdown } from 'react-native-material-dropdown';
+import moment from 'moment';
+
 
 export default (props) => {
     return (
@@ -69,7 +71,8 @@ class CreateBooking extends Component {
             clinic: [],
             clinic_id: "",
             doctor_id: "",
-            idtemp: ""
+            idtemp: "",
+            appTime: ""
         }
     }
 
@@ -153,6 +156,9 @@ class CreateBooking extends Component {
 
     _handleDatePicked = (date) => {
         console.log('A date has been picked: ', date);
+        this.setState({
+            appTime: moment(date).format('YYYY-MM-DD HH:mm:ss')
+        })
         this._hideDateTimePicker();
     };
 
@@ -188,10 +194,50 @@ class CreateBooking extends Component {
         
     }
 
+    doctor = (index) => {
+        console.log('doctor choosen: ', this.state.doctor[index].id )
+        this.setState({
+            doctor_id: this.state.doctor[index].id 
+        })
+    }
+
     symptom = (e) => {
         this.setState({
             symptom: e
         })
+    }
+
+    createBooking = async() => {
+        try{
+            let {
+                clinic_id,
+                doctor_id,
+                symptom,
+                appTime
+            } = this.state 
+
+            if(clinic_id === "" || doctor_id === "" || symptom === "" || appTime === ""){
+                Alert.alert("Form should be filled")
+            }else{
+                let input = {
+                    clinic_id,
+                    doctor_id,
+                    symptom,
+                    time: appTime
+                }
+
+                let book = await this.props.createBooking(input)
+                console.log('book: ', book)
+                if(book.data.createBooking.error === null){
+                    Alert.alert("Success Book, Go to Home to see Detail")
+                    this.props.navigation.navigate("Home")
+                }else{
+                    Alert.alert("Opps !!, please try again")
+                }
+            }
+        }catch(err){
+            console.log('err: ', err)
+        }
     }
 
     render() {
@@ -248,22 +294,38 @@ class CreateBooking extends Component {
                         onChangeText={(e, i) => {
                             console.log('e doctor--- >>>', e)
                             console.log('i doctor--- >>>', i)
+                            this.doctor(i)
                         }}
                     />
                 </View>
-                <View style={{ marginTop: 50, paddingLeft: '5%', paddingRight: '5%' }}>
+                <View style={{ marginTop: 10, paddingLeft: '5%', paddingRight: '5%'}}>
+                    <FormLabel>Appointment Time</FormLabel>
+                    <FormLabel>{this.state.appTime === "" ? "-- : --" : this.state.appTime}</FormLabel>
+                </View>
+                <View style={{ marginTop: 20, paddingLeft: '5%', paddingRight: '5%' }}>
                     <Button
+                        raised
+                        backgroundColor="#4169E1"
                         onPress={this._showDateTimePicker}
                         title={'Selec Date & Time'}
                     />
                 </View>
-
+                
                 <View>
                     <DateTimePicker
                         mode={'datetime'}
                         isVisible={this.state.isDateTimePickerVisible}
                         onConfirm={this._handleDatePicked}
                         onCancel={this._hideDateTimePicker}
+                    />
+                </View>
+                <View style={{ marginTop: 70, paddingLeft: '5%', paddingRight: '5%' }}>
+                    <Button
+                        raised
+                        style={{ borderRadius: 50 }}
+                        backgroundColor="#3CB371"
+                        title="BOOK"
+                        onPress={this.createBooking}
                     />
                 </View>
             </View>
@@ -274,6 +336,9 @@ class CreateBooking extends Component {
 const styles = StyleSheet.create({
     container: {
         alignItems: "center"
+    },
+    buttonBook: {
+        borderRadius: 30
     },
     loading: {
         position: 'absolute',
@@ -354,7 +419,48 @@ let Queries = {
     `
 }
 
+let Mutations = {
+    createBooking: gql`
+        mutation createBooking(
+            $input: createBooking
+        ){
+            createBooking(input: $input){
+                booking{
+                    id,
+                    book_id,
+                    clinic_id,
+                    patient_id,
+                    doctor_id,
+                    symptom,
+                    time,
+                    status,
+                    created_at,
+                    updated_at,
+                    deleted_at
+                },
+                error
+            }
+        }
+    `
+}
+
 let Wrapper = compose(
+    graphql(Mutations.createBooking, {
+        props: ({mutate}) => ({
+            createBooking: (input) => {
+                return mutate({
+                    variables: {
+                        input
+                    },
+                    refetchQueries: [{
+                        query: Queries.getAllClinic
+                    },{
+                        query: Queries.getAllDoctor
+                    }]
+                })
+            }
+        })
+    }),
     graphql(Queries.getAllClinic,{
         name: "getAllClinic",
         options: {

@@ -10,16 +10,36 @@ import Login from '../screen/Login'
 import Profile from '../screen/Profile'
 import Booking from '../screen/Booking'
 import DetailProfile from '../component/DetailProfile'
+import BookingDetail  from '../component/BookingDetail'
 
 const Navigations = StackNavigator({
-    Login: {screen: Login},
+    Login: {
+        screen: Login,
+        navigationOptions: ({ navigation }) => ({
+            title: 'Login',
+        }),
+    },
     Home: TabNavigator({
-        Home: {
-            screen: Home,
-            navigationOptions: ({ navigation }) => ({
-                title: 'Home',
+        Home: StackNavigator({
+            Home: {
+                screen: Home,
+                navigationOptions: ({ navigation }) => ({
+                    title: 'Home',
+                }),
+            },
+            BookingDetail: {
+                screen: BookingDetail,
+                navigationOptions: ({ navigation }) => ({
+                    title: 'Book Detail',
+                }),
+            }
+        }, {
+                headerMode: 'none',
+                navigationOptions: {
+                    headerVisible: false,
+                },
+                initialRouteName: 'Home'
             }),
-        },
         Profile: StackNavigator({
             Profile: {
                 screen: Profile,
